@@ -132,7 +132,6 @@ if use_TPU:
 
 # Get path to current working directory
 CWD_PATH = os.path.dirname(os.getcwd())
-print(CWD_PATH)
 
 # Path to .tflite file, which contains the model that is used for object detection
 PATH_TO_CKPT = os.path.join(CWD_PATH, MODEL_NAME, GRAPH_NAME)
@@ -216,47 +215,59 @@ while True:
         output_details[2]['index'])[0]  # Confidence of detected objects
     #num = interpreter.get_tensor(output_details[3]['index'])[0]  # Total number of detected objects (inaccurate and not needed)
 
-    # Loop over all detections and draw detection box if confidence is above minimum threshold
-    for i in range(len(scores)):
-        if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
+    print("original classses ", classes)
+    print("original boxes ", boxes)
 
-            # Get bounding box coordinates and draw box
-            # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
-            ymin = int(max(1, (boxes[i][0] * imH)))
-            xmin = int(max(1, (boxes[i][1] * imW)))
-            ymax = int(min(imH, (boxes[i][2] * imH)))
-            xmax = int(min(imW, (boxes[i][3] * imW)))
+    if 0 in classes:
+        inx_list = [inx for inx, val in enumerate(classes) if val ==0]
+        print("index list ", inx_list)
+        boxes = [boxes[i] for i in inx_list]
+        print("boxes ", boxes)
 
-            cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (10, 255, 0), 2)
+        # Loop over all detections and draw detection box if confidence is above minimum threshold
+        for box in boxes:
+            for i in range(len(scores)):
+                if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
 
-            # Draw label
-            object_name = labels[int(
-                classes[i]
-            )]  # Look up object name from "labels" array using class index
-            label = '%s: %d%%' % (object_name, int(scores[i] * 100)
-                                  )  # Example: 'person: 72%'
-            labelSize, baseLine = cv2.getTextSize(label,
-                                                  cv2.FONT_HERSHEY_SIMPLEX,
-                                                  0.7, 2)  # Get font size
-            label_ymin = max(
-                ymin, labelSize[1] +
-                10)  # Make sure not to draw label too close to top of window
-            cv2.rectangle(frame, (xmin, label_ymin - labelSize[1] - 10),
-                          (xmin + labelSize[0], label_ymin + baseLine - 10),
-                          (255, 255, 255),
-                          cv2.FILLED)  # Draw white box to put label text in
-            cv2.putText(frame, label, (xmin, label_ymin - 7),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0),
-                        2)  # Draw label text
+                    # Get bounding box coordinates and draw box
+                    # Interpreter can return coordinates that are outside of image dimensions, need to force them to be within image using max() and min()
+                    ymin = int(max(1, (box[0] * imH)))
+                    xmin = int(max(1, (box[1] * imW)))
+                    ymax = int(min(imH, (box[2] * imH)))
+                    xmax = int(min(imW, (box[3] * imW)))
 
-            # Draw circle in center
-            xcenter = xmin + (int(round((xmax - xmin) / 2)))
-            ycenter = ymin + (int(round((ymax - ymin) / 2)))
-            cv2.circle(frame, (xcenter, ycenter), 5, (0, 0, 255), thickness=-1)
 
-            # Print info
-            print('Object ' + str(i) + ': ' + object_name + ' at (' +
-                  str(xcenter) + ', ' + str(ycenter) + ')')
+                    cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (10, 255, 0), 2)
+
+                    # Draw label
+                    # Look up object name from "labels" array using class index
+                    if classes[i] == 0:
+                        object_name = labels[int(classes[i])]
+
+                        label = '%s: %d%%' % (object_name, int(scores[i] * 100)
+                                              )  # Example: 'person: 72%'
+                        labelSize, baseLine = cv2.getTextSize(label,
+                                                              cv2.FONT_HERSHEY_SIMPLEX,
+                                                              0.7, 2)  # Get font size
+                        label_ymin = max(
+                            ymin, labelSize[1] +
+                            10)  # Make sure not to draw label too close to top of window
+                        cv2.rectangle(frame, (xmin, label_ymin - labelSize[1] - 10),
+                                      (xmin + labelSize[0], label_ymin + baseLine - 10),
+                                      (255, 255, 255),
+                                      cv2.FILLED)  # Draw white box to put label text in
+                        cv2.putText(frame, label, (xmin, label_ymin - 7),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0),
+                                    2)  # Draw label text
+
+                        # Draw circle in center
+                        xcenter = xmin + (int(round((xmax - xmin) / 2)))
+                        ycenter = ymin + (int(round((ymax - ymin) / 2)))
+                        cv2.circle(frame, (xcenter, ycenter), 5, (0, 0, 255), thickness=-1)
+
+                        # Print info
+                        # print('Object ' + str(i) + ': ' + object_name + ' at (' +
+                        # str(xcenter) + ', ' + str(ycenter) + ')')
 
     # Draw framerate in corner of frame
     cv2.putText(frame, 'FPS: {0:.2f}'.format(frame_rate_calc), (30, 50),
