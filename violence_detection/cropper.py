@@ -18,9 +18,7 @@ print(os.getcwd())
 print(__file__)
 
 # Get path to current working directory
-# Only works in Jupyter notebook
 CWD_PATH = os.getcwd()
-# CWD_PATH = os.path.dirname(__file__)
 
 # Path to .tflite file, which contains the model that is used for object detection
 PATH_TO_CKPT = os.path.join(CWD_PATH, MODEL_DIR, MODEL_NAME)
