@@ -130,3 +130,12 @@ docker_run:
 
 docker_push:
 	docker push ${IMAGE_URI}
+
+# ----------------------------------
+# Download Best Model from checkpoint
+# ----------------------------------
+
+download_best:
+	gsutil -m cp -r dir gs://${BUCKET_NAME}/ ###### CHANGE_THIS_VARIABLE #######
+	
+#### CHANGE to name of architecture used in trainer
