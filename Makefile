@@ -110,3 +110,23 @@ gcp_submit_training:
 		--region ${REGION} \
 		--master-image-uri ${IMAGE_URI} \
 		--stream-logs
+
+# ----------------------------------
+#            Docker Image
+# ----------------------------------
+
+DOCKER_IMAGE_NAME= docker_violence_detection
+
+IMAGE_REPO_NAME= violence_detection
+
+IMAGE_TAG= 602-sep-violence-detection
+
+IMAGE_URI=gcr.io/${PROJECT_ID}/${IMAGE_REPO_NAME}:${IMAGE_TAG}
+
+docker_build:
+	docker build -t ${IMAGE_URI} ./
+docker_run:
+	docker run --gpus all ${IMAGE_URI}
+
+docker_push:
+	docker push ${IMAGE_URI}
