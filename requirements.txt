@@ -9,9 +9,15 @@ numpy
 pandas
 scikit-learn
 matplotlib
+random
+
+# loading data
+os
+shutil
 
 # deep learning
 opencv-python
+tensorflow
 
 # tests/linter
 black
