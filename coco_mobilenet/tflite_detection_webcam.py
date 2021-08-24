@@ -90,7 +90,7 @@ parser.add_argument(
 parser.add_argument(
     '--threshold',
     help='Minimum confidence threshold for displaying detected objects',
-    default=0.5)
+    default=0.75)
 parser.add_argument(
     '--resolution',
     help=
