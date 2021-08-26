@@ -283,7 +283,7 @@ def detect_humans(capture, frame, boxes, classes, scores):
                     cv2.rectangle(frame, (xmin, ymin), (xmax, ymax),
                                   (10, 255, 0), 2)
 
-                    # Save frame into a new folder
+                    # Save cropped area into a variable for each frame
                     rectangle = frame[ymin:ymax, xmin:xmax]
 
                     people.append(rectangle)
@@ -302,5 +302,3 @@ if __name__ == "__main__":
         filename_list, VIDEO_PATH)
 
     people = detect_humans(capture, frame, boxes, classes, scores)
-
-    people[0].show()
