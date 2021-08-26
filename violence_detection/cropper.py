@@ -5,17 +5,26 @@ import numpy as np
 import sys
 import time
 import fnmatch
+import argparse
 import matplotlib.pyplot as plt
 import importlib.util
 from tensorflow.lite.python.interpreter import Interpreter
 
-MODEL_DIR = 'coco_mobilenet'
+parser = argparse.ArgumentParser()
+parser.add_argument('--modeldir',
+                    help='Folder the .tflite file is located in',
+                    required=True)
+parser.add_argument(
+    '--threshold',
+    help='Minimum confidence threshold for displaying detected objects',
+    default=0.70)
+
+args = parser.parse_args()
+
+MODEL_DIR = args.modeldir
 MODEL_NAME = 'detect.tflite'
 LABELMAP_NAME = 'labelmap.txt'
-min_conf_threshold = float(0.70)
-
-print(os.getcwd())
-print(__file__)
+min_conf_threshold = float(args.threshold)
 
 # Get path to current working directory
 CWD_PATH = os.getcwd()
@@ -50,114 +59,248 @@ floating_model = (input_details[0]['dtype'] == np.float32)
 input_mean = 127.5
 input_std = 127.5
 
-# Path to video dataset
-# TODO: Change the file path to videos / frames of interest
-startpath_nonviolent = 'raw_data/videos_dataset/Real Life Violence Dataset/NonViolence/'
+# # Path to video dataset
+# startpath_nonviolent = 'raw_data/videos_dataset/Real Life Violence Dataset/NonViolence/'
 
-PATH_NONVIOLENT = os.path.join(CWD_PATH, startpath_nonviolent)
+# PATH_NONVIOLENT = os.path.join(CWD_PATH, startpath_nonviolent)
 
-# Create a list with all the file names
-vids_list = os.listdir(startpath_nonviolent)
+# # Create a list with all the file names
+# vids_list = os.listdir(startpath_nonviolent)
 
-# Establish a pattern to detect only videos
-pattern = "*.mp4"
+# # Establish a pattern to detect only videos
+# pattern = "*.mp4"
 
-# Create a list of names of every file in the dataset
-filename_list = []
-for file in vids_list:
-    if fnmatch.fnmatch(file, pattern):
-        filename_list.append(file)
+# # Create a list of names of every file in the dataset
+# filename_list = []
+# for file in vids_list:
+#     if fnmatch.fnmatch(file, pattern):
+#         filename_list.append(file)
 
-# Initialize video
-for video in filename_list[0:1000]:
+# # Initialize video
+# for video in filename_list[0:1000]:
 
-    capture = cv2.VideoCapture(
-        f'{PATH_NONVIOLENT}{video}'
-    )
+#     capture = cv2.VideoCapture(
+#         f'{PATH_NONVIOLENT}{video}'
+#     )
 
-    # Create window
-    cv2.namedWindow('Object detector', cv2.WINDOW_NORMAL)
+#     # Create window
+#     cv2.namedWindow('Object detector', cv2.WINDOW_NORMAL)
+
+#     # Get the dimensions of the video used for rectangle creation
+#     imW = capture.get(3)  # float `width`
+#     imH = capture.get(4)  # float `height`
+
+#     while capture.isOpened():
+#         # Capture the video frame
+#         ret, frame = capture.read()
+
+#         if not ret:
+#             break
+
+#         # Start timer (for calculating frame rate)
+#         t1 = cv2.getTickCount()
+
+#         # Acquire frame and resize to expected shape [1xHxWx3]
+#         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+#         frame_resized = cv2.resize(frame_rgb, (width, height))
+#         input_data = np.expand_dims(frame_resized, axis=0)
+
+#         # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
+#         if floating_model:
+#             input_data = (np.float32(input_data) - input_mean) / input_std
+
+#         # Perform the actual detection by running the model with the image as input
+#         interpreter.set_tensor(input_details[0]['index'], input_data)
+#         interpreter.invoke()
+
+#         # Retrieve detection results
+#         # Bounding box coordinates of detected objects
+#         boxes = interpreter.get_tensor(output_details[0]['index'])[0]
+
+#         # Class index of detected objects
+#         classes = interpreter.get_tensor(output_details[1]['index'])[0]
+
+#         # Confidence of detected objects
+#         scores = interpreter.get_tensor(output_details[2]['index'])[0]
+
+#         # Locate indexes for persons classes only
+#         if 0 in classes:
+#             idx_list = [idx for idx, val in enumerate(classes) if val == 0]
+
+#             # Reassign bounding boxes only to detected people
+#             boxes = [boxes[i] for i in idx_list]
+
+#             # Loop over all detections and draw detection box if confidence is above minimum threshold
+#             for i in range(len(scores)):
+#                 if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
+
+#                     # Get bounding box coordinates and draw box for all people detected
+#                     if len(boxes) > 0:
+#                         # Find the top-most top
+#                         top = min([i[0] for i in boxes])
+#                         # Find the left-most left
+#                         left = min([i[1] for i in boxes])
+#                         # Find the bottom-most bottom
+#                         bottom = max([i[2] for i in boxes])
+#                         # Find the right-most right
+#                         right = max([i[3] for i in boxes])
+
+#                         # Convert bounding lines into coordinates
+#                         # Interpreter can return coordinates that are outside of image dimensions,
+#                         # Need to force them to be within image using max() and min()
+#                         ymin = int(max(1, (top * imH)))
+#                         xmin = int(max(1, (left * imW)))
+#                         ymax = int(min(imH, (bottom * imH)))
+#                         xmax = int(min(imW, (right * imW)))
+
+#                         # Build a rectangle
+#                         cv2.rectangle(frame, (xmin, ymin), (xmax, ymax),
+#                                       (10, 255, 0), 2)
+
+#         # All the results have been drawn on the frame, so it's time to display it.
+#         cv2.imshow('Object detector', frame)
+
+#         # Press 'q' to quit
+#         if cv2.waitKey(1) == ord('q'):
+#             capture.release()
+#             cv2.destroyAllWindows()
+#             break
+
+# #cleanup
+# capture.release()
+# cv2.destroyAllWindows()
+
+def locate_videos(VIDEO_DIR_PATH):
+    # Path to video dataset
+    VIDEO_DIR = VIDEO_DIR_PATH
+    CWD_PATH = os.getcwd()
+
+    VIDEO_PATH = os.path.join(CWD_PATH, VIDEO_DIR)
+
+    # Create a list with all the file names
+    vids_list = os.listdir(VIDEO_DIR)
+
+    # Establish a pattern to detect only videos
+    pattern = "*.mp4"
+
+    # Create a list of names of every file in the dataset
+    filename_list = []
+    for file in vids_list:
+        if fnmatch.fnmatch(file, pattern):
+            filename_list.append(file)
+
+    return filename_list, VIDEO_PATH
+
+# Loop through each video and instantiate windows
+def capture_frames(filename_list, VIDEO_PATH):
+
+    for video in filename_list[0:1000]:
+
+        # initialize the video
+        capture = cv2.VideoCapture(f'{VIDEO_PATH}{video}')
+
+        # Create window
+        # cv2.namedWindow('Object detector', cv2.WINDOW_NORMAL)
+
+        while capture.isOpened():
+            # Capture the video frame
+            ret, frame = capture.read()
+
+            if not ret:
+                break
+
+            # Acquire frame and resize to expected shape [1xHxWx3]
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame_resized = cv2.resize(frame_rgb, (width, height))
+            input_data = np.expand_dims(frame_resized, axis=0)
+
+            # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
+            if floating_model:
+                input_data = (np.float32(input_data) - input_mean) / input_std
+
+            # Perform the actual detection by running the model with the image as input
+            interpreter.set_tensor(input_details[0]['index'], input_data)
+            interpreter.invoke()
+
+            # Retrieve detection results
+            # Bounding box coordinates of detected objects
+            boxes = interpreter.get_tensor(output_details[0]['index'])[0]
+
+            # Class index of detected objects
+            classes = interpreter.get_tensor(output_details[1]['index'])[0]
+
+            # Confidence of detected objects
+            scores = interpreter.get_tensor(output_details[2]['index'])[0]
+
+            # Press 'q' to quit
+            if cv2.waitKey(1) == ord('q'):
+                capture.release()
+                cv2.destroyAllWindows()
+                break
+
+    return capture, frame, boxes, classes, scores
+
+# Detect humans within the windows and create ROI
+def detect_humans(capture, frame, boxes, classes, scores):
+
+    people = []
 
     # Get the dimensions of the video used for rectangle creation
     imW = capture.get(3)  # float `width`
     imH = capture.get(4)  # float `height`
 
-    while capture.isOpened():
-        # Capture the video frame
-        ret, frame = capture.read()
+    # Locate indexes for persons classes only
+    if 0 in classes:
+        idx_list = [idx for idx, val in enumerate(classes) if val == 0]
 
-        if not ret:
-            break
+        # Reassign bounding boxes only to detected people
+        boxes = [boxes[i] for i in idx_list]
 
-        # Start timer (for calculating frame rate)
-        t1 = cv2.getTickCount()
+        # Loop over all detections and draw detection box if confidence is above minimum threshold
+        for i in range(len(scores)):
+            if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
 
-        # Acquire frame and resize to expected shape [1xHxWx3]
-        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        frame_resized = cv2.resize(frame_rgb, (width, height))
-        input_data = np.expand_dims(frame_resized, axis=0)
+                # Get bounding box coordinates and draw box for all people detected
+                if len(boxes) > 0:
+                    # Find the top-most top
+                    top = min([i[0] for i in boxes])
+                    # Find the left-most left
+                    left = min([i[1] for i in boxes])
+                    # Find the bottom-most bottom
+                    bottom = max([i[2] for i in boxes])
+                    # Find the right-most right
+                    right = max([i[3] for i in boxes])
 
-        # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
-        if floating_model:
-            input_data = (np.float32(input_data) - input_mean) / input_std
+                    # Convert bounding lines into coordinates
+                    # Interpreter can return coordinates that are outside of image dimensions,
+                    # Need to force them to be within image using max() and min()
+                    ymin = int(max(1, (top * imH)))
+                    xmin = int(max(1, (left * imW)))
+                    ymax = int(min(imH, (bottom * imH)))
+                    xmax = int(min(imW, (right * imW)))
 
-        # Perform the actual detection by running the model with the image as input
-        interpreter.set_tensor(input_details[0]['index'], input_data)
-        interpreter.invoke()
+                    # Build a rectangle
+                    cv2.rectangle(frame, (xmin, ymin), (xmax, ymax),
+                                  (10, 255, 0), 2)
 
-        # Retrieve detection results
-        # Bounding box coordinates of detected objects
-        boxes = interpreter.get_tensor(output_details[0]['index'])[0]
+                    # Save frame into a new folder
+                    rectangle = frame[ymin:ymax, xmin:xmax]
 
-        # Class index of detected objects
-        classes = interpreter.get_tensor(output_details[1]['index'])[0]
+                    people.append(rectangle)
+                    # cv2.imshow('Object detector', frame)
 
-        # Confidence of detected objects
-        scores = interpreter.get_tensor(output_details[2]['index'])[0]
+    return people
 
-        # Locate indexes for persons classes only
-        if 0 in classes:
-            idx_list = [idx for idx, val in enumerate(classes) if val == 0]
 
-            # Reassign bounding boxes only to detected people
-            boxes = [boxes[i] for i in idx_list]
 
-            # Loop over all detections and draw detection box if confidence is above minimum threshold
-            for i in range(len(scores)):
-                if ((scores[i] > min_conf_threshold) and (scores[i] <= 1.0)):
+if __name__ == "__main__":
 
-                    # Get bounding box coordinates and draw box for all people detected
-                    if len(boxes) > 0:
-                        # Find the top-most top
-                        top = min([i[0] for i in boxes])
-                        # Find the left-most left
-                        left = min([i[1] for i in boxes])
-                        # Find the bottom-most bottom
-                        bottom = max([i[2] for i in boxes])
-                        # Find the right-most right
-                        right = max([i[3] for i in boxes])
+    test_PATH = 'raw_data/videos_dataset/Real Life Violence Dataset/NonViolence/'
+    filename_list, VIDEO_PATH = locate_videos(test_PATH)
 
-                        # Convert bounding lines into coordinates
-                        # Interpreter can return coordinates that are outside of image dimensions,
-                        # Need to force them to be within image using max() and min()
-                        ymin = int(max(1, (top * imH)))
-                        xmin = int(max(1, (left * imW)))
-                        ymax = int(min(imH, (bottom * imH)))
-                        xmax = int(min(imW, (right * imW)))
+    capture, frame, boxes, classes, scores = capture_frames(
+        filename_list, VIDEO_PATH)
 
-                        # Build a rectangle
-                        cv2.rectangle(frame, (xmin, ymin), (xmax, ymax),
-                                      (10, 255, 0), 2)
+    people = detect_humans(capture, frame, boxes, classes, scores)
 
-        # All the results have been drawn on the frame, so it's time to display it.
-        cv2.imshow('Object detector', frame)
-
-        # Press 'q' to quit
-        if cv2.waitKey(1) == ord('q'):
-            capture.release()
-            cv2.destroyAllWindows()
-            break
-
-# cleanup
-capture.release()
-cv2.destroyAllWindows()
+    people[0].show()
