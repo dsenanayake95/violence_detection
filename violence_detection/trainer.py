@@ -128,12 +128,12 @@ from tensorflow.keras.callbacks import EarlyStopping
 
 # Build a trainer class
 class Trainer():
-    def __init__(self):
-        self.root = '../raw_data/frames_dataset'
+    def __init__(self, root):
+        self.root = root
 
 
 # Splitting frames into train, val, test
-    def split(self, root_dir):
+    def split(self):
         self.val_ratio = 0.15
         self.test_ratio = 0.05
 
@@ -242,3 +242,11 @@ class Trainer():
                   epochs=5,
                   verbose=1,
                   callbacks=es)
+
+
+if __name__ == "__main__":
+    trainer = Trainer(root='../raw_data/frames_dataset')
+    trainer.split()
+    trainer.generate_data()
+    trainer.load_vgg19()
+    trainer.run()
