@@ -321,3 +321,8 @@ if __name__ == "__main__":
 
     # Output the list of pictures
     print("size of picture list: ", len(pictures_list))
+    from matplotlib import pyplot as plt
+
+    for i in pictures_list[0:10]:
+        plt.imshow(i, interpolation='nearest')
+        plt.show()
