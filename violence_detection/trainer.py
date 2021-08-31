@@ -230,15 +230,15 @@ class Trainer():
 
 # Instantiate  + fit model
     def run(self):
-        self.model = load_vgg19()
+        self.model = self.load_vgg19()
         es = EarlyStopping(monitor='val_accuracy',
                            mode='max',
                            patience=20,
                            verbose=1,
                            restore_best_weights=True)
 
-        self.model.fit(train_generator,
-                  validation_data=validation_generator,
+        self.model.fit(self.train_generator,
+                  validation_data=self.validation_generator,
                   epochs=5,
                   verbose=1,
                   callbacks=es)
