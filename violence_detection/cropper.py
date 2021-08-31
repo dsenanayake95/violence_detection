@@ -8,6 +8,7 @@ import fnmatch
 import argparse
 import matplotlib.pyplot as plt
 import importlib.util
+import tensorly as tl
 from tensorflow.lite.python.interpreter import Interpreter
 
 parser = argparse.ArgumentParser()
@@ -192,58 +193,63 @@ def locate_videos(VIDEO_DIR_PATH):
     return filename_list, VIDEO_PATH
 
 # Loop through each video and instantiate windows
-def capture_frames(filename_list, VIDEO_PATH):
+def capture_frames(video, VIDEO_PATH, max_frames=100):
 
-    for video in filename_list[0:1000]:
+    # for video in filename_list[0]:
 
-        # initialize the video
-        capture = cv2.VideoCapture(f'{VIDEO_PATH}{video}')
+    # initialize the video
+    capture = cv2.VideoCapture(f'{VIDEO_PATH}{video}')
 
-        # Create window
-        # cv2.namedWindow('Object detector', cv2.WINDOW_NORMAL)
+    # Initialize an empty array
+    frames_array = []
+    frame_number = 0
 
-        while capture.isOpened():
-            # Capture the video frame
-            ret, frame = capture.read()
+    # Create window
+    # cv2.namedWindow('Object detector', cv2.WINDOW_NORMAL)
 
-            if not ret:
-                break
+    while capture.isOpened() and frame_number < max_frames:
+        # Capture the video frame
+        ret, frame = capture.read()
 
-            # Acquire frame and resize to expected shape [1xHxWx3]
-            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-            frame_resized = cv2.resize(frame_rgb, (width, height))
-            input_data = np.expand_dims(frame_resized, axis=0)
+        if not ret:
+            break
 
-            # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
-            if floating_model:
-                input_data = (np.float32(input_data) - input_mean) / input_std
+        # Acquire frame and resize to expected shape [1xHxWx3]
+        frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        frame_resized = cv2.resize(frame_rgb, (width, height))
+        input_data = np.expand_dims(frame_resized, axis=0)
 
-            # Perform the actual detection by running the model with the image as input
-            interpreter.set_tensor(input_details[0]['index'], input_data)
-            interpreter.invoke()
+        # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
+        if floating_model:
+            input_data = (np.float32(input_data) - input_mean) / input_std
 
-            # Retrieve detection results
-            # Bounding box coordinates of detected objects
-            boxes = interpreter.get_tensor(output_details[0]['index'])[0]
+        # Perform the actual detection by running the model with the image as input
+        interpreter.set_tensor(input_details[0]['index'], input_data)
+        interpreter.invoke()
 
-            # Class index of detected objects
-            classes = interpreter.get_tensor(output_details[1]['index'])[0]
+        # Retrieve detection results
+        # Bounding box coordinates of detected objects
+        boxes = interpreter.get_tensor(output_details[0]['index'])[0]
 
-            # Confidence of detected objects
-            scores = interpreter.get_tensor(output_details[2]['index'])[0]
+        # Class index of detected objects
+        classes = interpreter.get_tensor(output_details[1]['index'])[0]
 
-            # Press 'q' to quit
-            if cv2.waitKey(1) == ord('q'):
-                capture.release()
-                cv2.destroyAllWindows()
-                break
+        # Confidence of detected objects
+        scores = interpreter.get_tensor(output_details[2]['index'])[0]
 
-    return capture, frame, boxes, classes, scores
+        frames_array.append(input_data)
+        frame_number += 1
+
+        # Press 'q' to quit
+        if cv2.waitKey(1) == ord('q'):
+            capture.release()
+            cv2.destroyAllWindows()
+            break
+
+    return capture, frame, boxes, classes, scores, (frames_array)
 
 # Detect humans within the windows and create ROI
 def detect_humans(capture, frame, boxes, classes, scores):
-
-    people = []
 
     # Get the dimensions of the video used for rectangle creation
     imW = capture.get(3)  # float `width`
@@ -286,19 +292,32 @@ def detect_humans(capture, frame, boxes, classes, scores):
                     # Save cropped area into a variable for each frame
                     rectangle = frame[ymin:ymax, xmin:xmax]
 
-                    people.append(rectangle)
                     # cv2.imshow('Object detector', frame)
 
-    return people
-
-
+    return rectangle
 
 if __name__ == "__main__":
-
+    print("Importing and reading done")
+    # Get the video path √
     test_PATH = 'raw_data/videos_dataset/Real Life Violence Dataset/NonViolence/'
-    filename_list, VIDEO_PATH = locate_videos(test_PATH)
+    print("Locating videos done")
+    # Slice the video into frames (Better to slice into tensors)
+    capture, frame, boxes, classes, scores, people_array = capture_frames(
+        'NV_566.mp4', test_PATH)
 
-    capture, frame, boxes, classes, scores = capture_frames(
-        filename_list, VIDEO_PATH)
+    print("number of frames: ", len(people_array))
 
-    people = detect_humans(capture, frame, boxes, classes, scores)
+    # Create tensors from matrices
+    people_tensor = tl.tensor(people_array)
+
+    print("shape of tensors: ", people_tensor.shape)
+    # Call the model to detect humans for each frame
+    # Then append the output into a list of pictures
+    pictures_list = []
+    for i in people_array:
+        rectangle = detect_humans(capture, frame, boxes, classes, scores)
+        pictures_list.append(rectangle)
+        i += 1
+
+    # Output the list of pictures
+    print("size of picture list: ", len(pictures_list))

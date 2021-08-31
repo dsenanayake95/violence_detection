@@ -219,6 +219,8 @@ class Trainer():
                                 transfer_model,
                                 tensorflow.keras.layers.Flatten(),
                                 tensorflow.keras.layers.Dense(dense_n, activation='relu'),
+                                tensorflow.keras.layers.Dense(dense_n/2, activation='relu'),
+                                tensorflow.keras.layers.Dense(dense_n/4, activation='relu'),
                                 tensorflow.keras.layers.Dense(1, activation='sigmoid')
                                     ])
 
