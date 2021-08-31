@@ -54,6 +54,12 @@ pypi_test:
 pypi:
 	@twine upload dist/* -u $(PYPI_USERNAME)
 
+# ----------------------------------
+#      		    API
+# ----------------------------------
+run_api:
+	uvicorn api.fast:app --reload
+
 
 # ----------------------------------
 #      		GCP Set-up
