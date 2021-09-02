@@ -18,7 +18,6 @@ shutil
 # deep learning
 opencv-python
 tensorflow
-tensorly
 
 # tests/linter
 black
