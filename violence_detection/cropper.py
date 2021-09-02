@@ -85,14 +85,10 @@ def locate_videos(VIDEO_DIR_PATH):
 
 
 # Loop through each video and instantiate windows
-def capture_frames(video, VIDEO_PATH, max_frames=100):
+def capture_frames(video, VIDEO_PATH):
 
     # initialize the video
     capture = cv2.VideoCapture(f'{VIDEO_PATH}{video}')
-
-    # Initialize an empty array
-    frames_array = []
-    frame_number = 0
 
     # Get the dimensions of the video used for rectangle creation
     imW = capture.get(3)  # float `width`
@@ -101,7 +97,9 @@ def capture_frames(video, VIDEO_PATH, max_frames=100):
     # Create window
     cv2.namedWindow('Object detector', cv2.WINDOW_NORMAL)
 
-    while capture.isOpened() and frame_number < max_frames:
+    rectangles = []
+
+    while capture.isOpened():
         # Capture the video frame
         ret, frame = capture.read()
 
@@ -130,9 +128,6 @@ def capture_frames(video, VIDEO_PATH, max_frames=100):
 
         # Confidence of detected objects
         scores = interpreter.get_tensor(output_details[2]['index'])[0]
-
-        frames_array.append(input_data)
-        frame_number += 1
 
         # Locate indexes for persons classes only
         if 0 in classes:
@@ -164,41 +159,38 @@ def capture_frames(video, VIDEO_PATH, max_frames=100):
                         ymax = int(min(imH, (bottom * imH)))
                         xmax = int(min(imW, (right * imW)))
 
+                        # Save cropped area into a variable for each frame
+                        rectangle = frame[ymin:ymax, xmin:xmax]
+
+                        rectangles.append(rectangle)
+
                         # Build a rectangle
                         cv2.rectangle(frame, (xmin, ymin), (xmax, ymax),
                                       (10, 255, 0), 2)
 
-                        # Save cropped area into a variable for each frame
-                        rectangle = frame[ymin:ymax, xmin:xmax]
+    return rectangles
 
-    return rectangle, frames_array
+
+# my_path = os.path.join(os.path.dirname(os.path.dirname(__file__)),"raw_data/videos_dataset/Real Life Violence Dataset/NonViolence/")
+
+
+# ok = __file__
+
 
 
 if __name__ == "__main__":
     print("Importing and reading done")
     # Get the video path √
-    test_PATH = 'raw_data/videos_dataset/Real Life Violence Dataset/NonViolence/'
+    test_PATH = '/Users/tu/code/dsenanayake95/violence_detection/raw_data/videos_dataset/Real Life Violence Dataset/NonViolence/'
+
     print("Locating videos done")
     # Slice the video into frames (Better to slice into tensors)
-    rectangle, people_array = capture_frames('NV_436.mp4', test_PATH)
-
-    print("number of frames: ", len(people_array))
-
-    # Create tensors from matrices
-    people_tensor = tl.tensor(people_array)
-
-    print("shape of tensors: ", people_tensor.shape)
-    # Call the model to detect humans for each frame
-    # Then append the output into a list of pictures
-    pictures_list = []
-    for i in people_array:
-        pictures_list.append(rectangle)
-        i += 1
+    rectangles = capture_frames('NV_572.mp4', test_PATH)
 
     # Output the list of pictures
-    print("size of picture list: ", len(pictures_list))
+    print("size of picture list: ", len(rectangles))
     from matplotlib import pyplot as plt
 
-    for i in pictures_list[0:10]:
+    for i in rectangles:
         plt.imshow(i, interpolation='nearest')
         plt.show()

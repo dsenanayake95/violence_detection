@@ -131,8 +131,7 @@ class Trainer():
     def __init__(self, root):
         self.root = root
 
-
-# Splitting frames into train, val, test
+    # Splitting frames into train, val, test
     def split(self):
         self.val_ratio = 0.15
         self.test_ratio = 0.05
@@ -145,35 +144,32 @@ class Trainer():
             os.makedirs(root_dir + '/val/' + label)
             os.makedirs(root_dir + '/test/' + label)
 
-
             # Creating partitions of the data after shuffling
             src = root_dir + "/" + label  # Folder to copy images from
 
-            allFileNames = os.listdir(src)
-            np.random.shuffle(allFileNames)
-            train_FileNames, val_FileNames, test_FileNames = np.split(np.array(allFileNames),
-                                                                  [int(len(allFileNames)* (1 - (val_ratio + test_ratio))),
-                                                                  int(len(allFileNames)* (1 - test_ratio))])
+            self.allFileNames = os.listdir(src)
+            np.random.shuffle(self.allFileNames)
+            self.train_FileNames, self.val_FileNames, self.test_FileNames = np.split(np.array(self.allFileNames),
+                                                                  [int(len(self.allFileNames)* (1 - (self.val_ratio + self.test_ratio))),
+                                                                  int(len(self.allFileNames)* (1 - self.test_ratio))])
 
-
-            train_FileNames = [src+'/'+ name for name in train_FileNames.tolist()]
-            val_FileNames = [src+'/' + name for name in val_FileNames.tolist()]
-            test_FileNames = [src+'/' + name for name in test_FileNames.tolist()]
+            self.train_FileNames = [src+'/'+ name for name in self.train_FileNames.tolist()]
+            self.val_FileNames = [src+'/' + name for name in self.val_FileNames.tolist()]
+            self.test_FileNames = [src+'/' + name for name in self.test_FileNames.tolist()]
 
             # Copy-pasting images
-            for name in train_FileNames:
+            for name in self.train_FileNames:
                 shutil.copy(name, root_dir + '/train/' + label)
 
-            for name in val_FileNames:
+            for name in self.val_FileNames:
                 shutil.copy(name, root_dir + '/val/' + label)
 
-            for name in test_FileNames:
+            for name in self.test_FileNames:
                 shutil.copy(name, root_dir + '/test/' + label)
 
 
-# Generate data + Augment frames in the train set
+    # Generate data + Augment frames in the train set
     def generate_data(self):
-        self.split()
         train_dir = self.root + "/train/"
 
         train_datagen = ImageDataGenerator(rescale=1.0/255.,
@@ -208,7 +204,7 @@ class Trainer():
                                                                       target_size=(224, 224))
         return self.train_generator, self.validation_generator
 
-# Transfer learning model
+    # Transfer learning model
     def load_vgg19(self, dense_n=512, lr= 0.000134,):
         transfer_model = tensorflow.keras.applications.VGG19(
                                                 include_top=False, weights="imagenet",
@@ -230,7 +226,7 @@ class Trainer():
                       metrics=['accuracy'])
         return self.model
 
-# Instantiate  + fit model
+    # Instantiate  + fit model
     def run(self):
         self.model = self.load_vgg19()
         es = EarlyStopping(monitor='val_accuracy',
@@ -247,8 +243,23 @@ class Trainer():
 
 
 if __name__ == "__main__":
+    print("loading trainer...")
     trainer = Trainer(root='../raw_data/frames_dataset')
+    print("trainer loaded")
+    print("spliting the data into train, val, test...")
     trainer.split()
+    print("data successfully split")
+    print('Total images: ', len(trainer.allFileNames))
+    print('Training: ', len(trainer.train_FileNames))
+    print('Validation: ', len(trainer.val_FileNames))
+    print('Testing: ', len(trainer.test_FileNames))
+
+    print("augmenting data now...")
     trainer.generate_data()
+    print("data successfully augmented")
+    print("loading vgg19...")
     trainer.load_vgg19()
+    print("vgg19 successfully loaded")
+    print("running model...")
     trainer.run()
+    print("model completed")
