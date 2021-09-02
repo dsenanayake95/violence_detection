@@ -13,7 +13,6 @@ matplotlib
 # deep learning
 opencv-python
 tensorflow
-tensorly
 
 # tests/linter
 black
@@ -35,4 +34,3 @@ memoized-property
 termcolor
 fnmatch
 argparse
-threading

@@ -8,8 +8,6 @@ import fnmatch
 import argparse
 import matplotlib.pyplot as plt
 import importlib.util
-import filevideostream
-import tensorly as tl
 from tensorflow.lite.python.interpreter import Interpreter
 
 parser = argparse.ArgumentParser()
@@ -194,3 +192,5 @@ if __name__ == "__main__":
     for i in rectangles:
         plt.imshow(i, interpolation='nearest')
         plt.show()
+
+    # Average frame per 5 second video is 33 frames
