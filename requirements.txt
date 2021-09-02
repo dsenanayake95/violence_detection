@@ -30,6 +30,7 @@ fastapi
 
 # front-end
 streamlit 
+streamlit-player
 requests
 
 # utilities
