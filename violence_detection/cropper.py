@@ -185,10 +185,10 @@ if __name__ == "__main__":
 
     print("Locating videos done")
     # Slice the video into frames (Better to slice into tensors)
-    rectangles = capture_frames('NV_572.mp4', test_PATH)
+    rectangles = capture_frames('NV_722.mp4', test_PATH)
 
     # Output the list of pictures
-    print("size of picture list: ", len(rectangles))
+    print("number of frames: ", len(rectangles))
     from matplotlib import pyplot as plt
 
     for i in rectangles:
