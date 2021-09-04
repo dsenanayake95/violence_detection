@@ -7,8 +7,10 @@ wheel>=0.29
 # data science
 numpy
 pandas
-scikit-learn
+# scikit-learn
 matplotlib
+Pillow
+tkinter
 random
 
 # loading data
