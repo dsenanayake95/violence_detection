@@ -31,8 +31,14 @@ gcsfs
 google-cloud-storage
 mlflow
 s3fs
+uvicorn 
 fastapi
-uvicorn
+
+# front-end
+streamlit 
+streamlit-player
+requests
+
 
 # utilities
 six>=1.14
