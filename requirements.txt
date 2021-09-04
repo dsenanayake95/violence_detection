@@ -9,9 +9,15 @@ numpy
 pandas
 scikit-learn
 matplotlib
+random
+
+# loading data
+os
+shutil
 
 # deep learning
 opencv-python
+tensorflow
 
 # tests/linter
 black
@@ -25,6 +31,7 @@ gcsfs
 google-cloud-storage
 mlflow
 s3fs
+<<<<<<< HEAD
 uvicorn 
 fastapi
 
@@ -32,9 +39,15 @@ fastapi
 streamlit 
 streamlit-player
 requests
+=======
+fastapi
+uvicorn
+>>>>>>> cfee7451be60a9609268c8ef7e03b2def121e17e
 
 # utilities
 six>=1.14
 joblib
 memoized-property
 termcolor
+fnmatch
+argparse
