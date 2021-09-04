@@ -5,11 +5,8 @@ import tempfile
 from PIL import Image
 import numpy as np
 import pandas as pd
+import tensorflow as tf 
 
-
-@st.cache
-def upload_model():
-    pass 
 
 def hide_streamlit_widgets():
     """
@@ -105,20 +102,34 @@ elif direction == 'Meet the team':
 ######################################### 
 
 elif direction == 'Try the model':
-    upload = st.empty()
-    #start_button = st.empty()
-    #stop_button = st.empty()
+# save model - tf.keras.models.save_model(model, 'MY_MODEL')
+    @st.cache
+    def load_model():
+        model = tf.keras.models.load_model('PATH_FOR_MY_MODEL')
+        return model 
+    model = load_model()
+    st.write('model has been loaded')
+    
+    def upload_video():
+        upload = st.empty()
 
-    with upload:
-        f = st.file_uploader('Upload Video file (mpeg/mp4 format)')
-        if f is not None:
-            tfile  = tempfile.NamedTemporaryFile(delete = True)
-            tfile.write(f.read())
+        with upload:
+            video = st.file_uploader('Upload Video file (mpeg/mp4 format)')
+            if video is not None:
+                tfile  = tempfile.NamedTemporaryFile(delete = True)
+                tfile.write(video.read())
+                
+    def cropped_frames():
+        pass
+    
+    def predict():
+        for frame in cropped_frames:
+            prediction = model.predict(frame)
+            return frame
+        
+        
 
-            upload.empty()
-            vf = cv2.VideoCapture(tfile.name)
-
-
+          
 ###
 ###Code to play a YouTube video
 ###
@@ -127,3 +138,12 @@ elif direction == 'Try the model':
         #st_player(title)
 
     
+#workflow
+# upload video 
+# cropper creates frames
+# run prediction on each cropped images
+# 
+# return video with bounding boxes and probabilities 
+
+#webrtc - output videos on streamlit 
+

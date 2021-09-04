@@ -33,6 +33,7 @@ gcsfs
 google-cloud-storage
 mlflow
 s3fs
+
 uvicorn 
 fastapi
 
@@ -40,7 +41,11 @@ fastapi
 streamlit 
 streamlit-player
 requests
+fastapi
+uvicorn
+=======
 
+>>>>>>> 2582eccc12a86d1b1af7552769d1cdffd6d1225f
 
 # utilities
 six>=1.14
