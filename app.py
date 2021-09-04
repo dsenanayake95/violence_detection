@@ -97,18 +97,14 @@ elif direction == 'Meet the team':
 #           Try the model               #
 ######################################### 
 
-elif direction == 'Try the model':
-    
-    title = st.text_input('YouTube URL', 'Insert URL here') 
-    if st.button('Is there violence in the video?'):
-        st_player(title)
 
-    st.write("OR")
+
 
 #########################################
 #           Upload a video              #
 ######################################### 
 
+elif direction == 'Try the model':
     upload = st.empty()
     #start_button = st.empty()
     #stop_button = st.empty()
@@ -119,6 +115,15 @@ elif direction == 'Try the model':
             tfile  = tempfile.NamedTemporaryFile(delete = True)
             tfile.write(f.read())
 
+            upload.empty()
+            vf = cv2.VideoCapture(tfile.name)
 
+
+###
+###Code to play a YouTube video
+###
+    #title = st.text_input('YouTube URL', 'Insert URL here') 
+    #if st.button('Is there violence in the video?'):
+        #st_player(title)
 
     
