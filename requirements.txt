@@ -10,12 +10,6 @@ pandas
 # scikit-learn
 matplotlib
 Pillow
-tkinter
-random
-
-# loading data
-os
-shutil
 
 # deep learning
 opencv-python
@@ -33,24 +27,18 @@ gcsfs
 google-cloud-storage
 mlflow
 s3fs
-
-uvicorn 
+uvicorn
 fastapi
 
 # front-end
-streamlit 
+streamlit
 streamlit-player
 requests
-fastapi
-uvicorn
-=======
 
->>>>>>> 2582eccc12a86d1b1af7552769d1cdffd6d1225f
 
 # utilities
 six>=1.14
 joblib
 memoized-property
 termcolor
-fnmatch
 argparse
