@@ -6,6 +6,7 @@ from PIL import Image
 import numpy as np
 import pandas as pd
 import tensorflow as tf 
+from violence_detection.cropper import capture_frames
 
 
 def hide_streamlit_widgets():
@@ -118,9 +119,31 @@ elif direction == 'Try the model':
             if video is not None:
                 tfile  = tempfile.NamedTemporaryFile(delete = True)
                 tfile.write(video.read())
+        return video 
+    
+    def predict_on_uploaded_video():
+        video = upload_video()
+        cap = cv2.VideoCapture(video)
+        
+        while(cap.isOpened()):
+            ret, frame = cap.read()
+            if ret == True:
+                # I think this is where we would predict?
                 
-    def cropped_frames():
-        pass
+                cv2.imshow('frame', frame)
+                
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
+            else:
+                break
+            
+        cap.release()
+                
+                
+    def cropped_frames(): # use CV2 and pillow (loops to the end of the video)
+        video = upload_video()
+        rectangles = capture_frames(video)
+        return rectangles 
     
     def predict():
         for frame in cropped_frames:
