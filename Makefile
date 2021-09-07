@@ -53,3 +53,122 @@ pypi_test:
 
 pypi:
 	@twine upload dist/* -u $(PYPI_USERNAME)
+
+# ----------------------------------
+#      		    API
+# ----------------------------------
+run_api:
+	uvicorn api.fast:app --reload
+
+
+# ----------------------------------
+#      		GCP Set-up
+# ----------------------------------
+
+PROJECT_ID=le-wagon-bootcamp-321818
+
+BUCKET_NAME=wagon-data-violence-detection
+
+REGION=europe-west1
+
+PYTHON_VERSION=3.7
+
+FRAMEWORK=scikit-learn
+
+RUNTIME_VERSION=1.15
+
+FILENAME=trainer ###### CHECK THIS IS THE SAME NAME AS THE FILE
+
+LOCAL_PATH="raw_data"
+
+DATA_BUCKET_FOLDER=data
+
+MODEL_BUCKET_FOLDER=model
+
+DATA_BUCKET_FILE_NAME=$(shell basename ${DATA_PATH})
+
+MODEL_BUCKET_FILE_NAME=$(shell basename ${MODEL_PATH})
+
+set_project:
+	@gcloud config set project ${PROJECT_ID}
+
+create_bucket:
+	@gsutil mb -l ${REGION} -p ${PROJECT_ID} gs://${BUCKET_NAME}
+
+upload_data:
+	@gsutil cp -R ${LOCAL_PATH} gs://${BUCKET_NAME}/${BUCKET_FOLDER}/${BUCKET_FILE_NAME}
+
+upload_model:
+	-@gsutil cp ${MODEL_PATH} gs://${BUCKET_NAME}/${MODEL_BUCKETFOLDER}/${MODEL_BUCKET_FILE_NAME}
+
+
+# ----------------------------------
+#            GCP Online Training
+# ----------------------------------
+
+BUCKET_TRAINING_FOLDER =trainings
+
+JOB_NAME=violence_detection$(shell date +'%Y%m%d_%H%M%S')
+
+gcp_submit_training:
+	gcloud ai-platform jobs submit training ${JOB_NAME} \
+		--scale-tier BASIC_GPU \
+		--region ${REGION} \
+		--master-image-uri ${IMAGE_URI} \
+		--stream-logs
+
+# ----------------------------------
+#            Docker Image
+# ----------------------------------
+
+DOCKER_IMAGE_NAME= docker_violence_detection
+
+IMAGE_REPO_NAME= violence_detection
+
+IMAGE_TAG= 602-sep-violence-detection
+
+IMAGE_URI=gcr.io/${PROJECT_ID}/${IMAGE_REPO_NAME}:${IMAGE_TAG}
+
+docker_build:
+	docker build -t ${IMAGE_URI} ./
+docker_run:
+	docker run --gpus all ${IMAGE_URI}
+
+docker_push:
+	docker push ${IMAGE_URI}
+
+# ----------------------------------
+# Download Best Model from checkpoint
+# ----------------------------------
+
+download_best:
+	gsutil -m cp -r dir gs://${BUCKET_NAME}/ ###### CHANGE_THIS_VARIABLE #######
+	
+#### CHANGE to name of architecture used in trainer
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 2582eccc12a86d1b1af7552769d1cdffd6d1225f
+
+
+# ----------------------------------
+#         HEROKU COMMANDS
+# ----------------------------------
+
+streamlit:
+	-@streamlit run app.py
+
+heroku_login:
+	-@heroku login
+
+heroku_create_app:
+	-@heroku create ${APP_NAME}
+
+deploy_heroku:
+	-@git push heroku master
+	-@heroku ps:scale web=1
+<<<<<<< HEAD
+=======
+>>>>>>> cfee7451be60a9609268c8ef7e03b2def121e17e
+=======
+>>>>>>> 2582eccc12a86d1b1af7552769d1cdffd6d1225f
