@@ -143,12 +143,8 @@ docker_push:
 
 download_best:
 	gsutil -m cp -r dir gs://${BUCKET_NAME}/ ###### CHANGE_THIS_VARIABLE #######
-	
+
 #### CHANGE to name of architecture used in trainer
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 2582eccc12a86d1b1af7552769d1cdffd6d1225f
 
 
 # ----------------------------------
@@ -167,8 +163,3 @@ heroku_create_app:
 deploy_heroku:
 	-@git push heroku master
 	-@heroku ps:scale web=1
-<<<<<<< HEAD
-=======
->>>>>>> cfee7451be60a9609268c8ef7e03b2def121e17e
-=======
->>>>>>> 2582eccc12a86d1b1af7552769d1cdffd6d1225f
