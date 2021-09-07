@@ -8,3 +8,6 @@ raw_data/
 *.mp4
 **/__pycache__/
 .env
+models/
+models/variables/
+*.pb
