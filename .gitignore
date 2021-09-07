@@ -8,3 +8,6 @@ raw_data/
 *.mp4
 **/__pycache__/
 .env
+violence_detection/models/*
+violence_detection/models/variables/*
+*.pb
