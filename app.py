@@ -8,6 +8,10 @@ import pandas as pd
 import tensorflow as tf
 import cv2
 import os
+from tensorflow.lite.python.interpreter import Interpreter
+
+PATH_FOR_MY_MODEL = 'violence_detection/models/Mobilenet_lr_2_model_v1'
+
 
 def hide_streamlit_widgets():
     """
@@ -58,7 +62,7 @@ if direction == 'About the project':
                  is using "human monitors". The extended exposure to violence in videos \
                      can cause harm to the mental health of these individuals. In addition, \
                          monitors may not be able to identify violence as it is happening \
-                             meaning fewer opportunities to intervene.'                                                                                                                                              )
+                             meaning fewer opportunities to intervene.'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     )
 
     if st.button('The Solution?'):
         print('button clicked!')
@@ -66,7 +70,7 @@ if direction == 'About the project':
             behaviour in videos. Our output is the probability of violent behaviour throughout \
                 the video. This approach means a reduction in the need for human monitors \
                     meaning a reduction in the negative impact on their mental health and \
-                        potentially the earlier identification of intervention.'                                                                                                                                                                )
+                        potentially the earlier identification of intervention.'                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                )
 
 #########################################
 #           Meet the team               #
@@ -105,31 +109,146 @@ if direction == 'About the project':
 
 elif direction == 'Try the model':
     # save model - tf.keras.models.save_model(model, 'MY_MODEL')
-    @st.cache
+    # @st.cache
     def load_model():
-        model = tf.keras.models.load_model('PATH_FOR_MY_MODEL')
+        model = tf.keras.models.load_model(PATH_FOR_MY_MODEL)
         return model
+
     model = load_model()
     st.write('model has been loaded')
 
-    def upload_video():
-        upload = st.empty()
+upload = st.empty()
 
-        with upload:
-            video = st.file_uploader('Upload Video file (mpeg/mp4 format)')
-            if video is not None:
-                tfile  = tempfile.NamedTemporaryFile(delete = True)
-                tfile.write(video.read())
-        return video
+with upload:
+    video = st.file_uploader('Upload Video file (mpeg/mp4 format)')
+    if video is not None:
+        tfile  = tempfile.NamedTemporaryFile(delete = True)
+        tfile.write(video.read())
+        video = tfile
 
-    def cropped_frames():
-        pass
+    def capture_rectangles(video):
+        MODEL_DIR = 'coco_mobilenet'
+        MODEL_NAME = 'detect.tflite'
+        LABELMAP_NAME = 'labelmap.txt'
 
-    def predict():
-        for frame in cropped_frames:
-            prediction = model.predict(frame)
-            return frame
+        # Get path to current working directory
+        CWD_PATH = os.getcwd()
 
+        # Path to .tflite file, which contains the model that is used for object detection
+        PATH_TO_CKPT = os.path.join(CWD_PATH, MODEL_DIR, MODEL_NAME)
+
+        # Path to label map file
+        PATH_TO_LABELS = os.path.join(CWD_PATH, MODEL_DIR, LABELMAP_NAME)
+
+        # Load the Tensorflow Lite model.
+        interpreter = Interpreter(model_path=PATH_TO_CKPT)
+
+        interpreter.allocate_tensors()
+
+        # Get model details
+        input_details = interpreter.get_input_details()
+        output_details = interpreter.get_output_details()
+        height = input_details[0]['shape'][1]
+        width = input_details[0]['shape'][2]
+        floating_model = (input_details[0]['dtype'] == np.float32)
+
+        input_mean = 127.5
+        input_std = 127.5
+
+        # initialize the video
+        capture = cv2.VideoCapture(video)
+
+        # Get the dimensions of the video used for rectangle creation
+        imW = capture.get(3)  # float `width`
+        imH = capture.get(4)  # float `height`
+
+        # Create window
+        cv2.namedWindow('Object detector', cv2.WINDOW_NORMAL)
+
+        rectangles = []
+
+        while capture.isOpened():
+            # Capture the video frame
+            ret, frame = capture.read()
+
+            if not ret:
+                break
+
+            # Acquire frame and resize to expected shape [1xHxWx3]
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frame_resized = cv2.resize(frame_rgb, (width, height))
+            input_data = np.expand_dims(frame_resized, axis=0)
+
+            # Normalize pixel values if using a floating model (i.e. if model is non-quantized)
+            if floating_model:
+                input_data = (np.float32(input_data) - input_mean) / input_std
+
+            # Perform the actual detection by running the model with the image as input
+            interpreter.set_tensor(input_details[0]['index'], input_data)
+            interpreter.invoke()
+
+            # Retrieve detection results
+            # Bounding box coordinates of detected objects
+            boxes = interpreter.get_tensor(output_details[0]['index'])[0]
+
+            # Class index of detected objects
+            classes = interpreter.get_tensor(output_details[1]['index'])[0]
+
+            # Confidence of detected objects
+            scores = interpreter.get_tensor(output_details[2]['index'])[0]
+
+            # Locate indexes for persons classes only
+            if 0 in classes:
+                idx_list = [idx for idx, val in enumerate(classes) if val == 0]
+
+                # Reassign bounding boxes only to detected people
+                boxes = [boxes[i] for i in idx_list]
+
+                # Loop over all detections and draw detection box if confidence is above minimum threshold
+                for i in range(len(scores)):
+                    if ((scores[i] > 0.70) and (scores[i] <= 1.0)):
+
+                        # Get bounding box coordinates and draw box for all people detected
+                        if len(boxes) > 0:
+                            # Find the top-most top
+                            top = min([i[0] for i in boxes])
+                            # Find the left-most left
+                            left = min([i[1] for i in boxes])
+                            # Find the bottom-most bottom
+                            bottom = max([i[2] for i in boxes])
+                            # Find the right-most right
+                            right = max([i[3] for i in boxes])
+
+                            # Convert bounding lines into coordinates
+                            # Interpreter can return coordinates that are outside of image dimensions,
+                            # Need to force them to be within image using max() and min()
+                            ymin = int(max(1, (top * imH)))
+                            xmin = int(max(1, (left * imW)))
+                            ymax = int(min(imH, (bottom * imH)))
+                            xmax = int(min(imW, (right * imW)))
+
+                            # Save cropped area into a variable for each frame
+                            rectangle = frame[ymin:ymax, xmin:xmax]
+
+                            rectangles.append(rectangle)
+
+                            # Build a rectangle
+                            cv2.rectangle(frame, (xmin, ymin), (xmax, ymax),
+                                          (10, 255, 0), 2)
+
+        return rectangles
+
+    def predict(rectangles):
+        for rectangle in rectangles:
+            prediction = model.predict(np.expand_dims(tf.image.resize(
+                    (rectangle), [224, 224]), axis=0) / 255.0)[0]
+
+            return round(prediction * 100)
+
+rectangles = capture_rectangles(video)
+pred = predict(rectangles)
+
+st.write(pred)
 
 #########################################
 #         Predict on the video          #

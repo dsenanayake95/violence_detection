@@ -83,7 +83,7 @@ def locate_videos(VIDEO_DIR_PATH):
 
 
 # Loop through each video and instantiate windows
-def capture_frames(video, VIDEO_PATH):
+def capture_frames(video='', VIDEO_PATH=''):
 
     # initialize the video
     capture = cv2.VideoCapture(f'{VIDEO_PATH}{video}')
