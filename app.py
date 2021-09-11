@@ -48,15 +48,17 @@ if direction == 'About the project':
                   monitors may not be able to identify violence as it is happening \
                           meaning fewer opportunities to intervene.'''
 
-    col1, col2 = st.columns(2)
+    if st.button('Example'):
 
-    col1.subheader('Group of Men on a Field')
-    non_violent = Image.open(os.path.join(CWD_PATH, 'images_frontend/non_violent_sample.jpg'))
-    col1.image(non_violent, caption='Probability of Violence: 30%', use_column_width=True)
+        col1, col2 = st.columns(2)
 
-    col2.subheader('Man About to Punch Another Person')
-    violent = Image.open(os.path.join(CWD_PATH, 'images_frontend/violent_sample.jpg'))
-    col2.image(violent, caption='Probability of Violence: 100%', use_column_width=True)
+        col1.subheader('Group of Men on a Field')
+        non_violent = Image.open(os.path.join(CWD_PATH, 'images_frontend/non_violent_sample.jpg'))
+        col1.image(non_violent, caption='Probability of Violence: 30%', use_column_width=True)
+
+        col2.subheader('Man About to Punch Another Person')
+        violent = Image.open(os.path.join(CWD_PATH, 'images_frontend/violent_sample.jpg'))
+        col2.image(violent, caption='Probability of Violence: 100%', use_column_width=True)
 
     '''We use transfer-learning and a CNN-RNN model to identify violent \
         behaviour in videos. Our output is the probability of violent behaviour throughout \
