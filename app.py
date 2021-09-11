@@ -71,6 +71,7 @@ if direction == 'About the project':
 #########################################
 
 elif direction == 'Try the model':
+    prediction_values = []
 
     model = tf.keras.models.load_model(PATH_FOR_MY_MODEL)
 
@@ -178,16 +179,9 @@ elif direction == 'Try the model':
                                 # Save cropped area into a variable for each frame
                                 rectangle = frame_rgb[ymin:ymax, xmin:xmax]
 
-                                # TODO: CHANGE COLOR OF BOX TO RED + VIOLENCE if 3 in a row was violent above 75%
-                                # Build a rectangle
-                                cv2.rectangle(frame_rgb, (xmin, ymin),
-                                              (xmax, ymax), (10, 255, 0), 2)
-
                                 #########################################
                                 #         Predict on the video          #
                                 #########################################
-
-                                pred_values = {}
 
                                 if rectangle is not None:
 
@@ -200,16 +194,33 @@ elif direction == 'Try the model':
                                             (rectangle), [224, 224]),
                                                       axis=0) / 255.0)
 
-                                # TODO: Display violence 100%
+                                    if prediction is not None:
+                                        prediction_values.append(prediction[0][0]*100)
+                                    else:
+                                        prediction_values.append(0)
 
-                                cv2.putText(
-                                    frame_rgb,
-                                    f"violence:{round(prediction[0][0]*100)}%",
-                                    (xmin + 20, ymin + 40), cv2.FONT_HERSHEY_SIMPLEX,
-                                    1.2, (0, 255, 10), 4)
+                                    if len(prediction_values) < 3:
+                                        cv2.rectangle(frame_rgb, (xmin, ymin),
+                                                      (xmax, ymax),
+                                                      (10, 255, 0), 2)
+                                    elif prediction_values[-1] >= 80 and prediction_values[-2] >= 80 and prediction_values[-3] >= 80:
+                                        cv2.rectangle(frame_rgb, (xmin, ymin),
+                                                          (xmax, ymax),
+                                                          (255, 0, 0), 2)
+                                    else:
+                                        cv2.rectangle(frame_rgb, (xmin, ymin),
+                                                          (xmax, ymax),
+                                                          (10, 255, 0), 2)
+
+                            cv2.putText(
+                                frame_rgb,
+                                f"violence:{round(prediction[0][0]*100)}%",
+                                (xmin + 20, ymin + 40),
+                                cv2.FONT_HERSHEY_SIMPLEX, 1.2,
+                                (0, 255, 10), 4)
 
                 stframe.image(frame_rgb)
-                frames += 1
+
 
     #########################################
     #           Button to refresh           #
