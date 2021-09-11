@@ -212,12 +212,20 @@ elif direction == 'Try the model':
                                                           (xmax, ymax),
                                                           (10, 255, 0), 2)
 
-                            cv2.putText(
-                                frame_rgb,
-                                f"violence:{round(prediction[0][0]*100)}%",
-                                (xmin + 20, ymin + 40),
-                                cv2.FONT_HERSHEY_SIMPLEX, 1.2,
-                                (0, 255, 10), 4)
+                            if prediction[0][0]*100 > 80:
+                                cv2.putText(
+                                    frame_rgb,
+                                    f"violence:{round(prediction[0][0]*100)}%",
+                                    (xmin + 20, ymin + 40),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 1.2,
+                                    (255, 0, 0), 4)
+                            else:
+                                cv2.putText(
+                                    frame_rgb,
+                                    f"violence:{round(prediction[0][0]*100)}%",
+                                    (xmin + 20, ymin + 40),
+                                    cv2.FONT_HERSHEY_SIMPLEX, 1.2,
+                                    (0, 255, 10), 4)
 
                 stframe.image(frame_rgb)
 
