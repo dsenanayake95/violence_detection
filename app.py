@@ -31,7 +31,7 @@ st.sidebar.markdown(f"""
     # Navigation menu
     """)
 
-direction = st.sidebar.radio('Select a page', ('About the project', 'Meet the team', 'Try the model'))
+direction = st.sidebar.radio('Select a page', ('About the project', 'Try the model'))
 
 #########################################
 # Title and introduction to the project #
@@ -74,8 +74,6 @@ elif direction == 'Try the model':
 
     model = tf.keras.models.load_model(PATH_FOR_MY_MODEL)
 
-    st.write('model has been loaded')
-
     upload = st.empty()
     frames = 0
 
@@ -107,126 +105,127 @@ elif direction == 'Try the model':
     with upload:
         video = st.file_uploader('Upload Video file (mpeg/mp4 format)')
         if video is not None:
-            st.write("video uploaded")
             tfile = tempfile.NamedTemporaryFile(delete=True)
             tfile.write(video.read())
 
-            vf = cv2.VideoCapture(tfile.name)
-            stframe = st.empty()
+            if st.button('play video'):
+                vf = cv2.VideoCapture(tfile.name)
+                stframe = st.empty()
 
-            # Get the dimensions of the video used for rectangle creation
-            imW = vf.get(3)  # float `width`
-            imH = vf.get(4)  # float `height`
+                # Get the dimensions of the video used for rectangle creation
+                imW = vf.get(3)  # float `width`
+                imH = vf.get(4)  # float `height`
 
-            while vf.isOpened():
-                ret, frame = vf.read()
-                # if frame is read correctly ret is True
-                if not ret:
-                    print("Can't receive frame (stream end?). Exiting ...")
-                    break
-                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                frame_resized = cv2.resize(frame_rgb, (width, height))
-                input_data = np.expand_dims(frame_resized, axis=0)
+                while vf.isOpened():
+                    ret, frame = vf.read()
+                    # if frame is read correctly ret is True
+                    if not ret:
+                        print("Can't receive frame (stream end?). Exiting ...")
+                        break
+                    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                    frame_resized = cv2.resize(frame_rgb, (width, height))
+                    input_data = np.expand_dims(frame_resized, axis=0)
 
-                if floating_model:
-                    input_data = (np.float32(input_data) - input_mean) / input_std
+                    if floating_model:
+                        input_data = (np.float32(input_data) - input_mean) / input_std
 
-                # Perform the actual detection by running the model with the image as input
-                interpreter.set_tensor(input_details[0]['index'], input_data)
-                interpreter.invoke()
+                    # Perform the actual detection by running the model with the image as input
+                    interpreter.set_tensor(input_details[0]['index'], input_data)
+                    interpreter.invoke()
 
-                # Retrieve detection results
-                # Bounding box coordinates of detected objects
-                boxes = interpreter.get_tensor(output_details[0]['index'])[0]
+                    # Retrieve detection results
+                    # Bounding box coordinates of detected objects
+                    boxes = interpreter.get_tensor(output_details[0]['index'])[0]
 
-                # Class index of detected objects
-                classes = interpreter.get_tensor(output_details[1]['index'])[0]
+                    # Class index of detected objects
+                    classes = interpreter.get_tensor(output_details[1]['index'])[0]
 
-                # Confidence of detected objects
-                scores = interpreter.get_tensor(output_details[2]['index'])[0]
+                    # Confidence of detected objects
+                    scores = interpreter.get_tensor(output_details[2]['index'])[0]
 
-                # Locate indexes for persons classes only
-                if 0 in classes:
-                    idx_list = [idx for idx, val in enumerate(classes) if val == 0]
+                    # Locate indexes for persons classes only
+                    if 0 in classes:
+                        idx_list = [idx for idx, val in enumerate(classes) if val == 0]
 
-                    # Reassign bounding boxes only to detected people
-                    boxes = [boxes[i] for i in idx_list]
+                        # Reassign bounding boxes only to detected people
+                        boxes = [boxes[i] for i in idx_list]
 
-                    # Loop over all detections and draw detection box if confidence is above minimum threshold
-                    for i in range(len(scores)):
-                        if ((scores[i] > 0.70) and (scores[i] <= 1.0)):
+                        # Loop over all detections and draw detection box if confidence is above minimum threshold
+                        for i in range(len(scores)):
+                            if ((scores[i] > 0.70) and (scores[i] <= 1.0)):
 
-                            # Get bounding box coordinates and draw box for all people detected
-                            if len(boxes) > 0:
-                                # Find the top-most top
-                                top = min([i[0] for i in boxes])
-                                # Find the left-most left
-                                left = min([i[1] for i in boxes])
-                                # Find the bottom-most bottom
-                                bottom = max([i[2] for i in boxes])
-                                # Find the right-most right
-                                right = max([i[3] for i in boxes])
+                                # Get bounding box coordinates and draw box for all people detected
+                                if len(boxes) > 0:
+                                    # Find the top-most top
+                                    top = min([i[0] for i in boxes])
+                                    # Find the left-most left
+                                    left = min([i[1] for i in boxes])
+                                    # Find the bottom-most bottom
+                                    bottom = max([i[2] for i in boxes])
+                                    # Find the right-most right
+                                    right = max([i[3] for i in boxes])
 
-                                # Convert bounding lines into coordinates
-                                # Interpreter can return coordinates that are outside of image dimensions,
-                                # Need to force them to be within image using max() and min()
-                                ymin = int(max(1, (top * imH)))
-                                xmin = int(max(1, (left * imW)))
-                                ymax = int(min(imH, (bottom * imH)))
-                                xmax = int(min(imW, (right * imW)))
+                                    # Convert bounding lines into coordinates
+                                    # Interpreter can return coordinates that are outside of image dimensions,
+                                    # Need to force them to be within image using max() and min()
+                                    ymin = int(max(1, (top * imH)))
+                                    xmin = int(max(1, (left * imW)))
+                                    ymax = int(min(imH, (bottom * imH)))
+                                    xmax = int(min(imW, (right * imW)))
 
-                                # Save cropped area into a variable for each frame
-                                rectangle = frame_rgb[ymin:ymax, xmin:xmax]
+                                    # Save cropped area into a variable for each frame
+                                    rectangle = frame_rgb[ymin:ymax, xmin:xmax]
 
-                                #########################################
-                                #         Predict on the video          #
-                                #########################################
+                                    #########################################
+                                    #         Predict on the video          #
+                                    #########################################
 
-                                if rectangle is not None:
+                                    if rectangle is not None:
 
-                                    cv2.rectangle(frame_rgb, (xmin, ymin),
-                                                  (xmin + 290, ymin + 50),
-                                                  (0, 0, 0), -1)
-
-                                    prediction = model.predict(
-                                        np.expand_dims(tf.image.resize(
-                                            (rectangle), [224, 224]),
-                                                      axis=0) / 255.0)
-
-                                    if prediction is not None:
-                                        prediction_values.append(prediction[0][0]*100)
-                                    else:
-                                        prediction_values.append(0)
-
-                                    if len(prediction_values) < 3:
                                         cv2.rectangle(frame_rgb, (xmin, ymin),
-                                                      (xmax, ymax),
-                                                      (10, 255, 0), 2)
-                                    elif prediction_values[-1] >= 80 and prediction_values[-2] >= 80 and prediction_values[-3] >= 80:
-                                        cv2.rectangle(frame_rgb, (xmin, ymin),
-                                                          (xmax, ymax),
-                                                          (255, 0, 0), 2)
-                                    else:
-                                        cv2.rectangle(frame_rgb, (xmin, ymin),
+                                                      (xmin + 290, ymin + 50),
+                                                      (0, 0, 0), -1)
+
+                                        prediction = model.predict(
+                                            np.expand_dims(tf.image.resize(
+                                                (rectangle), [224, 224]),
+                                                          axis=0) / 255.0)
+
+                                        if prediction is not None:
+                                            prediction_values.append(prediction[0][0]*100)
+                                        else:
+                                            prediction_values.append(0)
+
+                                        if len(prediction_values) < 3:
+                                            cv2.rectangle(frame_rgb, (xmin, ymin),
                                                           (xmax, ymax),
                                                           (10, 255, 0), 2)
+                                        elif prediction_values[-1] >= 80 and prediction_values[-2] >= 80 and prediction_values[-3] >= 80:
+                                            cv2.rectangle(frame_rgb, (xmin, ymin),
+                                                              (xmax, ymax),
+                                                              (255, 0, 0), 2)
+                                        else:
+                                            cv2.rectangle(frame_rgb, (xmin, ymin),
+                                                              (xmax, ymax),
+                                                              (10, 255, 0), 2)
 
-                            if prediction[0][0]*100 > 80:
-                                cv2.putText(
-                                    frame_rgb,
-                                    f"violence:{round(prediction[0][0]*100)}%",
-                                    (xmin + 20, ymin + 40),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 1.2,
-                                    (255, 0, 0), 4)
-                            else:
-                                cv2.putText(
-                                    frame_rgb,
-                                    f"violence:{round(prediction[0][0]*100)}%",
-                                    (xmin + 20, ymin + 40),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 1.2,
-                                    (0, 255, 10), 4)
+                                if prediction[0][0]*100 > 80:
+                                    cv2.putText(
+                                        frame_rgb,
+                                        f"violence:{round(prediction[0][0]*100)}%",
+                                        (xmin + 20, ymin + 40),
+                                        cv2.FONT_HERSHEY_SIMPLEX, 1.2,
+                                        (255, 0, 0), 4)
+                                else:
+                                    cv2.putText(
+                                        frame_rgb,
+                                        f"violence:{round(prediction[0][0]*100)}%",
+                                        (xmin + 20, ymin + 40),
+                                        cv2.FONT_HERSHEY_SIMPLEX, 1.2,
+                                        (0, 255, 10), 4)
 
-                stframe.image(frame_rgb)
+                    stframe.image(frame_rgb)
+
 
 
     #########################################
